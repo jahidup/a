@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+  <title>Test Portal - Student</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body { background: #f8fafc; }
+    .card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+    .lang-toggle { cursor: pointer; transition: all 0.2s; }
+  </style>
+</head>
+<body class="font-sans antialiased">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="card w-full max-w-md p-8">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800" data-i18n="appTitle">📘 Test Portal</h1>
+        <div class="flex space-x-2">
+          <button onclick="setLanguage('en')" class="lang-toggle px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover:bg-blue-200">EN</button>
+          <button onclick="setLanguage('hi')" class="lang-toggle px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium hover:bg-indigo-200">हिंदी</button>
+        </div>
+      </div>
+      
+      <!-- Login Form -->
+      <div id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="studentId">Student ID</label>
+          <input type="text" id="studentId" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g. 2024CS001">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="dob">Date of Birth (DDMMYY)</label>
+          <input type="text" id="dob" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="010105" maxlength="6">
+        </div>
+        <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-2">
+          <i class="fas fa-sign-in-alt"></i> <span data-i18n="login">Login</span>
+        </button>
+        <div class="text-center text-sm text-gray-600">
+          <span data-i18n="noAccount">Don't have an account?</span>
+          <a href="#" onclick="showRegister()" class="text-blue-600 hover:underline font-medium" data-i18n="registerHere">Register here</a>
+        </div>
+      </div>
+      
+      <!-- Registration Form (hidden by default) -->
+      <div id="registerForm" class="space-y-4 hidden">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="fullName">Full Name</label>
+          <input type="text" id="regName" class="w-full px-4 py-2 border border-gray-300 rounded-xl">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="studentId">Student ID</label>
+          <input type="text" id="regId" class="w-full px-4 py-2 border border-gray-300 rounded-xl">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="dob">Date of Birth (DDMMYY)</label>
+          <input type="text" id="regDob" class="w-full px-4 py-2 border border-gray-300 rounded-xl" maxlength="6">
+        </div>
+        <button onclick="handleRegister()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl transition">
+          <i class="fas fa-user-plus"></i> <span data-i18n="register">Register</span>
+        </button>
+        <div class="text-center text-sm">
+          <a href="#" onclick="showLogin()" class="text-gray-600 hover:underline" data-i18n="backToLogin">← Back to login</a>
+        </div>
+      </div>
+      
+      <div id="message" class="mt-4 text-sm text-center hidden"></div>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyH0aOUYKSYpPlK5WmBAbWTCk880-ARhgM1OlGpG4Cx2cfEA2E9GwYPFkzblzsruAdejw/exec'; // Replace with your deployed URL
+    
+    // i18n strings
+    const translations = {
+      en: {
+        appTitle: '📘 Test Portal',
+        studentId: 'Student ID',
+        dob: 'Date of Birth (DDMMYY)',
+        login: 'Login',
+        noAccount: "Don't have an account?",
+        registerHere: 'Register here',
+        fullName: 'Full Name',
+        register: 'Register',
+        backToLogin: '← Back to login'
+      },
+      hi: {
+        appTitle: '📘 परीक्षा पोर्टल',
+        studentId: 'छात्र आईडी',
+        dob: 'जन्म तिथि (DDMMYY)',
+        login: 'लॉग इन',
+        noAccount: 'खाता नहीं है?',
+        registerHere: 'यहाँ पंजीकरण करें',
+        fullName: 'पूरा नाम',
+        register: 'पंजीकरण',
+        backToLogin: '← लॉगिन पर वापस जाएँ'
+      }
+    };
+    
+    let currentLang = 'en';
+    
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key]) {
+          if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = translations[lang][key];
+          } else {
+            el.innerText = translations[lang][key];
+          }
+        }
+      });
+    }
+    
+    // Initialize English
+    window.onload = () => setLanguage('en');
+    
+    function showRegister() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.remove('hidden');
+    }
+    
+    function showLogin() {
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('loginForm').classList.remove('hidden');
+    }
+    
+    function showMessage(msg, isError = false) {
+      const msgDiv = document.getElementById('message');
+      msgDiv.classList.remove('hidden');
+      msgDiv.className = `mt-4 text-sm text-center p-3 rounded-xl ${isError ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+      msgDiv.innerText = msg;
+      setTimeout(() => msgDiv.classList.add('hidden'), 5000);
+    }
+    
+    async function handleLogin() {
+      const id = document.getElementById('studentId').value.trim();
+      const dob = document.getElementById('dob').value.trim();
+      if (!id || !dob) return showMessage('Please fill all fields', true);
+      
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'login', id, dob })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('studentName', data.data.name);
+          localStorage.setItem('studentId', id);
+          window.location.href = 'test.html';
+        } else {
+          showMessage(data.data, true);
+        }
+      } catch(e) {
+        showMessage('Connection error', true);
+      }
+    }
+    
+    async function handleRegister() {
+      const name = document.getElementById('regName').value.trim();
+      const id = document.getElementById('regId').value.trim();
+      const dob = document.getElementById('regDob').value.trim();
+      if (!name || !id || !dob) return showMessage('Please fill all fields', true);
+      
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'register', id, name, dob })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        showMessage('Registration successful! Please login.');
+        showLogin();
+      } else {
+        showMessage(data.data, true);
+      }
+    }
+  </script>
+</body>
+</html>
