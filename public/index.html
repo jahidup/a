@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscribe Newsletter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+      color: #555;
+    }
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1.2rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 0.9rem;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0051b3;
+    }
+    #message {
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: 500;
+    }
+    .success { color: #0a7c0a; }
+    .error { color: #d32f2f; }
+    .loading { color: #ff9800; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Subscribe to Newsletter</h2>
+    <form id="subscribeForm">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" required placeholder="John Doe">
+
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required placeholder="john@example.com">
+
+      <button type="submit">Subscribe</button>
+      <div id="message"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('subscribeForm');
+    const messageDiv = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      if (!name || !email) {
+        showMessage('Please fill in all fields.', 'error');
+        return;
+      }
+
+      showMessage('Submitting...', 'loading');
+
+      try {
+        const response = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage(data.message || 'Subscription successful! Check your email.', 'success');
+          form.reset();
+        } else {
+          showMessage(data.error || 'Something went wrong.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showMessage('Network error. Please try again.', 'error');
+      }
+    });
+
+    function showMessage(msg, type) {
+      messageDiv.textContent = msg;
+      messageDiv.className = type; // 'success', 'error', 'loading'
+    }
+  </script>
+</body>
+</html>
